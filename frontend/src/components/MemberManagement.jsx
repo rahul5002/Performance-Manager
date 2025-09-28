@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import EditMemberDialog from './EditMemberDialog';
 
-const MemberManagement = ({ members, onUpdateMember, onDeleteMember }) => {
+const MemberManagement = ({ members, onUpdateMember, onDeleteMember, loading }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingMember, setEditingMember] = useState(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
