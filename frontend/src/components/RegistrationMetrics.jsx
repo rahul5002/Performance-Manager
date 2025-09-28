@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
@@ -10,38 +10,62 @@ import {
   Users,
   Calendar
 } from 'lucide-react';
-import { mockRegistrationData } from '../mock/mockData';
+import axios from 'axios';
 
-const RegistrationMetrics = ({ members }) => {
-  const totalRegistrations = members.reduce((sum, member) => sum + member.registrationsBrought, 0);
-  const avgRegistrationsPerMember = Math.round(totalRegistrations / members.length);
-  const topRegistrationBringer = members.reduce((top, member) => 
-    member.registrationsBrought > top.registrationsBrought ? member : top
-  );
+const RegistrationMetrics = ({ members, loading }) => {
+  const [registrationData, setRegistrationData] = useState(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
 
-  // Calculate registration performance tiers
-  const registrationTiers = members.map(member => {
-    let tier = 'Bronze';
-    let tierColor = 'bg-orange-100 text-orange-800';
-    
-    if (member.registrationsBrought >= 15) {
-      tier = 'Platinum';
-      tierColor = 'bg-purple-100 text-purple-800';
-    } else if (member.registrationsBrought >= 12) {
-      tier = 'Gold';
-      tierColor = 'bg-yellow-100 text-yellow-800';
-    } else if (member.registrationsBrought >= 8) {
-      tier = 'Silver';
-      tierColor = 'bg-gray-100 text-gray-800';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const API = `${BACKEND_URL}/api`;
+
+  useEffect(() => {
+    fetchRegistrationData();
+  }, []);
+
+  const fetchRegistrationData = async () => {
+    try {
+      setMetricsLoading(true);
+      const response = await axios.get(`${API}/analytics/registrations`);
+      setRegistrationData(response.data);
+    } catch (error) {
+      console.error('Error fetching registration data:', error);
+    } finally {
+      setMetricsLoading(false);
     }
-    
-    return { ...member, tier, tierColor };
-  }).sort((a, b) => b.registrationsBrought - a.registrationsBrought);
+  };
 
-  // Calculate monthly growth from mock data
-  const monthlyGrowth = mockRegistrationData.map((month, index) => ({
+  if (loading || metricsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  const totalRegistrations = registrationData?.totalRegistrations || 0;
+  const avgRegistrationsPerMember = registrationData?.avgRegistrationsPerMember || 0;
+  const topRegistrationBringer = registrationData?.topPerformer || { name: '', registrationsBrought: 0 };
+
+  // Use registration tiers from API
+  const registrationTiers = registrationData?.registrationTiers || [];
+
+  // Get monthly data from API
+  const monthlyData = registrationData?.monthlyData || [];
+  const monthlyGrowth = monthlyData.map((month, index) => ({
     ...month,
-    growth: index > 0 ? ((month.registrations - mockRegistrationData[index - 1].registrations) / mockRegistrationData[index - 1].registrations) * 100 : 0
+    growth: index > 0 ? ((month.registrations - monthlyData[index - 1].registrations) / monthlyData[index - 1].registrations) * 100 : 0
   }));
 
   return (
@@ -141,11 +165,11 @@ const RegistrationMetrics = ({ members }) => {
                     <span className="text-lg font-bold text-gray-900">{member.registrationsBrought}</span>
                   </div>
                   <Progress 
-                    value={(member.registrationsBrought / Math.max(...members.map(m => m.registrationsBrought))) * 100} 
+                    value={(member.registrationsBrought / Math.max(...registrationTiers.map(m => m.registrationsBrought), 1)) * 100} 
                     className="h-2"
                   />
                   <div className="text-xs text-gray-500">
-                    {((member.registrationsBrought / totalRegistrations) * 100).toFixed(1)}% of total
+                    {member.percentage}% of total
                   </div>
                 </div>
               </div>
@@ -177,7 +201,7 @@ const RegistrationMetrics = ({ members }) => {
                 <div className="text-2xl font-bold text-blue-700 mb-1">{month.registrations}</div>
                 <div className="text-sm text-blue-600">registrations</div>
                 <Progress 
-                  value={(month.registrations / Math.max(...mockRegistrationData.map(m => m.registrations))) * 100} 
+                  value={(month.registrations / Math.max(...monthlyData.map(m => m.registrations), 1)) * 100} 
                   className="mt-2 h-2"
                 />
               </div>
