@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
@@ -10,18 +10,63 @@ import {
   AlertTriangle,
   Target
 } from 'lucide-react';
-import { mockTaskCategories } from '../mock/mockData';
+import axios from 'axios';
 
-const TaskAnalytics = ({ members }) => {
-  const totalTasks = members.reduce((sum, member) => sum + member.totalTasks, 0);
-  const completedTasks = members.reduce((sum, member) => sum + member.tasksCompleted, 0);
-  const pendingTasks = members.reduce((sum, member) => sum + member.tasksPending, 0);
-  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+const TaskAnalytics = ({ members, loading }) => {
+  const [taskCategories, setTaskCategories] = useState([]);
+  const [taskAnalytics, setTaskAnalytics] = useState(null);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  // Calculate member performance for ranking
-  const rankedMembers = [...members]
-    .sort((a, b) => b.efficiency - a.efficiency)
-    .map((member, index) => ({ ...member, rank: index + 1 }));
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const API = `${BACKEND_URL}/api`;
+
+  useEffect(() => {
+    fetchTaskData();
+  }, []);
+
+  const fetchTaskData = async () => {
+    try {
+      setCategoriesLoading(true);
+      const [categoriesResponse, analyticsResponse] = await Promise.all([
+        axios.get(`${API}/task-categories`),
+        axios.get(`${API}/analytics/tasks`)
+      ]);
+      setTaskCategories(categoriesResponse.data);
+      setTaskAnalytics(analyticsResponse.data);
+    } catch (error) {
+      console.error('Error fetching task data:', error);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  if (loading || categoriesLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  const totalTasks = taskAnalytics?.totalTasks || 0;
+  const completedTasks = taskAnalytics?.completedTasks || 0;
+  const pendingTasks = taskAnalytics?.pendingTasks || 0;
+  const completionRate = taskAnalytics?.completionRate || 0;
+  const avgEfficiency = taskAnalytics?.avgEfficiency || 0;
+
+  // Use ranked members from API
+  const rankedMembers = taskAnalytics?.rankedMembers || [];
 
   return (
     <div className="space-y-6">
@@ -73,7 +118,7 @@ const TaskAnalytics = ({ members }) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {Math.round(members.reduce((sum, member) => sum + member.efficiency, 0) / members.length)}%
+              {avgEfficiency}%
             </div>
             <p className="text-xs text-blue-100 mt-1">
               Team performance
@@ -92,7 +137,7 @@ const TaskAnalytics = ({ members }) => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {mockTaskCategories.map((category) => {
+            {taskCategories.map((category) => {
               const completionRate = Math.round((category.completed / category.total) * 100);
               return (
                 <div key={category.category} className="bg-gradient-to-br from-slate-50 to-gray-100 p-4 rounded-lg border border-gray-200">
