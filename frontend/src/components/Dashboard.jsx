@@ -8,34 +8,60 @@ import MemberManagement from './MemberManagement';
 import TaskAnalytics from './TaskAnalytics';
 import RegistrationMetrics from './RegistrationMetrics';
 import AddMemberDialog from './AddMemberDialog';
-import { mockCommitteeMembers } from '../mock/mockData';
+import axios from 'axios';
 
 const Dashboard = () => {
-  const [members, setMembers] = useState(mockCommitteeMembers);
+  const [members, setMembers] = useState([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddMember = (newMember) => {
-    const member = {
-      ...newMember,
-      id: String(members.length + 1),
-      tasksCompleted: 0,
-      tasksPending: 0,
-      totalTasks: 0,
-      efficiency: 0,
-      registrationsBrought: 0,
-      performanceHistory: []
-    };
-    setMembers([...members, member]);
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const API = `${BACKEND_URL}/api`;
+
+  // Fetch members on component mount
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API}/members`);
+      setMembers(response.data);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdateMember = (updatedMember) => {
-    setMembers(members.map(member => 
-      member.id === updatedMember.id ? updatedMember : member
-    ));
+  const handleAddMember = async (newMember) => {
+    try {
+      const response = await axios.post(`${API}/members`, newMember);
+      setMembers([...members, response.data]);
+    } catch (error) {
+      console.error('Error adding member:', error);
+    }
   };
 
-  const handleDeleteMember = (memberId) => {
-    setMembers(members.filter(member => member.id !== memberId));
+  const handleUpdateMember = async (updatedMember) => {
+    try {
+      const response = await axios.put(`${API}/members/${updatedMember.id}`, updatedMember);
+      setMembers(members.map(member => 
+        member.id === updatedMember.id ? response.data : member
+      ));
+    } catch (error) {
+      console.error('Error updating member:', error);
+    }
+  };
+
+  const handleDeleteMember = async (memberId) => {
+    try {
+      await axios.delete(`${API}/members/${memberId}`);
+      setMembers(members.filter(member => member.id !== memberId));
+    } catch (error) {
+      console.error('Error deleting member:', error);
+    }
   };
 
   return (
