@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from typing import List
 from models.committee_member import CommitteeMember, CommitteeMemberCreate, CommitteeMemberUpdate
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from server import db
+from database import db
 import logging
 from datetime import datetime
 
