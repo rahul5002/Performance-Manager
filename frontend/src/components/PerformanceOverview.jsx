@@ -11,16 +11,34 @@ import {
   Target
 } from 'lucide-react';
 
-const PerformanceOverview = ({ members }) => {
+const PerformanceOverview = ({ members, loading }) => {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   const totalMembers = members.length;
   const totalTasksCompleted = members.reduce((sum, member) => sum + member.tasksCompleted, 0);
   const totalTasksPending = members.reduce((sum, member) => sum + member.tasksPending, 0);
   const totalRegistrations = members.reduce((sum, member) => sum + member.registrationsBrought, 0);
-  const avgEfficiency = Math.round(members.reduce((sum, member) => sum + member.efficiency, 0) / totalMembers);
+  const avgEfficiency = totalMembers > 0 ? Math.round(members.reduce((sum, member) => sum + member.efficiency, 0) / totalMembers) : 0;
 
-  const topPerformer = members.reduce((top, member) => 
+  const topPerformer = members.length > 0 ? members.reduce((top, member) => 
     member.efficiency > top.efficiency ? member : top
-  );
+  ) : null;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
