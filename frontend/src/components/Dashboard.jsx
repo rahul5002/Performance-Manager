@@ -100,7 +100,7 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="overview">
-            <PerformanceOverview members={members} />
+            <PerformanceOverview members={members} loading={loading} />
           </TabsContent>
 
           <TabsContent value="members">
@@ -108,15 +108,16 @@ const Dashboard = () => {
               members={members}
               onUpdateMember={handleUpdateMember}
               onDeleteMember={handleDeleteMember}
+              loading={loading}
             />
           </TabsContent>
 
           <TabsContent value="tasks">
-            <TaskAnalytics members={members} />
+            <TaskAnalytics members={members} loading={loading} />
           </TabsContent>
 
           <TabsContent value="registrations">
-            <RegistrationMetrics members={members} />
+            <RegistrationMetrics members={members} loading={loading} />
           </TabsContent>
         </Tabs>
 
