@@ -130,29 +130,31 @@ const PerformanceOverview = ({ members, loading }) => {
       </Card>
 
       {/* Top Performer Highlight */}
-      <Card className="md:col-span-2 lg:col-span-3 border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center">
-            <TrendingUp className="mr-2 h-5 w-5" />
-            Top Performer This Period
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-2xl font-bold">{topPerformer.name}</h3>
-              <p className="text-emerald-100">{topPerformer.role}</p>
-              <p className="text-sm text-emerald-200 mt-1">
-                {topPerformer.tasksCompleted} tasks completed • {topPerformer.registrationsBrought} registrations
-              </p>
+      {topPerformer && (
+        <Card className="md:col-span-2 lg:col-span-3 border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold flex items-center">
+              <TrendingUp className="mr-2 h-5 w-5" />
+              Top Performer This Period
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold">{topPerformer.name}</h3>
+                <p className="text-emerald-100">{topPerformer.role}</p>
+                <p className="text-sm text-emerald-200 mt-1">
+                  {topPerformer.tasksCompleted} tasks completed • {topPerformer.registrationsBrought} registrations
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold">{topPerformer.efficiency}%</div>
+                <div className="text-emerald-200 text-sm">Efficiency Score</div>
+              </div>
             </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold">{topPerformer.efficiency}%</div>
-              <div className="text-emerald-200 text-sm">Efficiency Score</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
