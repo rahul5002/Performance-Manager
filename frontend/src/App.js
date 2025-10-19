@@ -5,7 +5,10 @@ import axios from "axios";
 import Dashboard from "./components/Dashboard";
 import { Toaster } from "./components/ui/toaster";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Use environment variable for backend URL
+// In development, falls back to localhost if not set
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
+  (process.env.NODE_ENV === 'development' ? 'http://localhost:8001' : '');
 const API = `${BACKEND_URL}/api`;
 
 const Home = () => {

@@ -17,8 +17,10 @@ const TaskAnalytics = ({ members, loading }) => {
   const [taskAnalytics, setTaskAnalytics] = useState(null);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  // Use local backend for development
-  const BACKEND_URL = window.location.hostname === 'localhost' ? 'http://localhost:8001' : process.env.REACT_APP_BACKEND_URL;
+  // Use environment variable for backend URL
+  // In development, falls back to localhost if not set
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:8001' : '');
   const API = `${BACKEND_URL}/api`;
 
   useEffect(() => {
