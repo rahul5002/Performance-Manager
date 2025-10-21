@@ -1,0 +1,29 @@
+services:
+  # Backend Web Service
+  - type: web
+    name: performance-manager-backend
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: performance_manager
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: API_VERSION
+        value: 1.0.0
+      - key: API_TITLE
+        value: Committee Performance Dashboard API
+      - key: LOG_LEVEL
+        value: INFO
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    healthCheckPath: /health
+    autoDeploy: true

@@ -12,13 +12,50 @@ from routes import members, analytics, task_categories
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Get CORS origins from environment variable
+cors_origins_str = os.getenv('CORS_ORIGINS', 'http://localhost:3000')
+cors_origins = [origin.strip() for origin in cors_origins_str.split(',')]
+
+# Get environment configuration
+environment = os.getenv('ENVIRONMENT', 'development')
+api_title = os.getenv('API_TITLE', 'Committee Performance Dashboard API')
+api_version = os.getenv('API_VERSION', '1.0.0')
+
 # Create the main app without a prefix
-app = FastAPI(title="Committee Performance Dashboard API", version="1.0.0")
+app = FastAPI(
+    title=api_title,
+    version=api_version,
+    docs_url="/docs" if environment == "development" else None,
+    redoc_url="/redoc" if environment == "development" else None
+)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-# Health check endpoint
+# Health check endpoint (outside /api prefix for platform monitoring)
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    try:
+        # Test database connection
+        await db.command('ping')
+        return {
+            "status": "healthy",
+            "service": "Committee Performance Dashboard API",
+            "version": api_version,
+            "database": "connected"
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return {
+            "status": "unhealthy",
+            "service": "Committee Performance Dashboard API",
+            "version": api_version,
+            "database": "disconnected",
+            "error": str(e)
+        }
+
+# API root endpoint
 @api_router.get("/")
 async def root():
     return {"message": "Committee Performance Dashboard API is running!"}
@@ -31,10 +68,11 @@ api_router.include_router(task_categories.router)
 # Include the router in the main app
 app.include_router(api_router)
 
+# CORS middleware with environment-based origins
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
